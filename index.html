@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe from Receipt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #faf5e9;
+    --surface: #ffffff;
+    --surface-raised: #fffdf8;
+    --ink: #2a2418;
+    --ink-soft: #6b6252;
+    --ink-faint: #a89d84;
+    --line: #dcd2ba;
+    --olive: #56622e;
+    --olive-ink: #333a1a;
+    --olive-soft: #eef0e1;
+    --rust: #bf4d28;
+    --rust-ink: #8f3a1e;
+    --rust-contrast: #fff8f1;
+    --shadow: 0 1px 2px rgba(42, 36, 24, 0.06), 0 8px 24px -12px rgba(42, 36, 24, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1b1811;
+      --surface: #242019;
+      --surface-raised: #2b261d;
+      --ink: #efe7d6;
+      --ink-soft: #b3a890;
+      --ink-faint: #766c58;
+      --line: #3c3527;
+      --olive: #9cb06b;
+      --olive-ink: #d7e2b8;
+      --olive-soft: #2b331c;
+      --rust: #e38356;
+      --rust-ink: #ffd9c4;
+      --rust-contrast: #241209;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b1811;
+    --surface: #242019;
+    --surface-raised: #2b261d;
+    --ink: #efe7d6;
+    --ink-soft: #b3a890;
+    --ink-faint: #766c58;
+    --line: #3c3527;
+    --olive: #9cb06b;
+    --olive-ink: #d7e2b8;
+    --olive-soft: #2b331c;
+    --rust: #e38356;
+    --rust-ink: #ffd9c4;
+    --rust-contrast: #241209;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    padding-inline: 20px;
+    padding-block: 40px 64px;
+  }
+
+  .page {
+    max-width: 640px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  header.top {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-block: 8px 4px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1.title {
+    font-family: "Fraunces", Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .tagline {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 46ch;
+    margin-inline: auto;
+    text-wrap: balance;
+  }
+
+  /* ---- shared card shell ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-body { padding: 22px; }
+
+  .perf {
+    height: 11px;
+    background-image: radial-gradient(circle at 9px 0, transparent 7.5px, var(--paper) 8px);
+    background-size: 18px 11px;
+    background-repeat: repeat-x;
+    background-position: top center;
+  }
+  .perf.on-surface {
+    background-image: radial-gradient(circle at 9px 0, transparent 7.5px, var(--surface) 8px);
+  }
+
+  .card-title {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .link-btn {
+    font-family: inherit;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 2px;
+  }
+  .link-btn:hover { color: var(--rust); }
+
+  /* ---- upload zone ---- */
+  .dropzone {
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: var(--paper);
+  }
+  .dropzone:hover, .dropzone.drag {
+    border-color: var(--rust);
+    background: var(--rust-contrast);
+  }
+  .dropzone svg { width: 40px; height: 40px; color: var(--olive); }
+  .dropzone .dz-main { font-weight: 600; font-size: 15px; }
+  .dropzone .dz-sub { font-size: 13px; color: var(--ink-soft); }
+  input[type="file"] { display: none; }
+
+  .receipt-preview {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .receipt-thumb {
+    width: 76px;
+    height: 100px;
+    object-fit: cover;
+    object-position: top;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    background: var(--paper);
+  }
+  .receipt-meta { font-size: 13px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .receipt-meta strong { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+
+  /* ---- status / thinking ---- */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--rust);
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .notice {
+    font-size: 13.5px;
+    color: var(--rust-ink);
+    background: var(--rust-contrast);
+    border: 1px solid color-mix(in srgb, var(--rust) 35%, transparent);
+    border-radius: 7px;
+    padding: 10px 12px;
+  }
+  .notice.quiet {
+    color: var(--ink-soft);
+    background: var(--paper);
+    border-color: var(--line);
+  }
+
+  /* ---- item list (receipt tape) ---- */
+  .item-list { display: flex; flex-direction: column; }
+  .item-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 14px;
+  }
+  .item-row:last-of-type { border-bottom: none; }
+  .item-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--olive);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .item-row .item-name {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--ink);
+    font: inherit;
+    padding: 2px 0;
+    min-width: 0;
+  }
+  .item-row.unchecked .item-name { color: var(--ink-faint); text-decoration: line-through; }
+  .item-row .item-name:focus { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 2px; }
+  .item-row .item-qty {
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  .item-row .item-del {
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-faint);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+  .item-row .item-del:hover { color: var(--rust); }
+
+  .add-item-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .add-item-row input {
+    flex: 1;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .add-item-row input:focus { outline: 2px solid var(--rust); outline-offset: 1px; }
+  .add-item-row button {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .add-item-row button:hover { border-color: var(--olive); color: var(--olive); }
+
+  /* ---- preferences ---- */
+  .prefs { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+  .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .chip.active { border-color: var(--olive); background: var(--olive-soft); color: var(--olive-ink); }
+  .prefs input[type="text"] {
+    font-family: "Work Sans", sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--paper);
+    color: var(--ink);
+    width: 100%;
+  }
+  .prefs input[type="text"]:focus { outline: 2px solid var(--rust); outline-offset: 1px; }
+  .prefs label { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.04em; }
+
+  .cta-row { display: flex; justify-content: center; margin-top: 20px; }
+  button.cta {
+    font-family: "Work Sans", sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    background: var(--rust);
+    color: var(--rust-contrast);
+    border: none;
+    border-radius: 8px;
+    padding: 13px 26px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  button.cta:hover { filter: brightness(1.06); }
+  button.cta:disabled { opacity: 0.55; cursor: not-allowed; }
+  button.cta:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
+
+  /* ---- recipe card ---- */
+  .recipe-body {
+    font-family: "Work Sans", sans-serif;
+    font-size: 15.5px;
+    color: var(--ink);
+  }
+  .recipe-body h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .recipe-body h2:not(:first-child) {
+    margin-top: 30px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--line);
+  }
+  .recipe-body h3 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin: 18px 0 8px;
+  }
+  .recipe-body p { margin: 0 0 12px; color: var(--ink-soft); max-width: 60ch; }
+  .recipe-body ul, .recipe-body ol { margin: 0 0 14px; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  .recipe-body li { color: var(--ink); }
+  .recipe-body strong { color: var(--ink); font-weight: 700; }
+  .recipe-actions { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  button.secondary {
+    font-family: "Work Sans", sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  button.secondary:hover { border-color: var(--olive); color: var(--olive); }
+
+  /* ---- history ---- */
+  .history { display: flex; flex-direction: column; gap: 10px; }
+  .history-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    background: none;
+    border-left: none; border-right: none; border-top: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-row:hover .history-title { color: var(--rust); }
+  .history-title { font-weight: 600; font-size: 14px; color: var(--ink); flex: 1; }
+  .history-date { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--ink-faint); }
+
+  footer.note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding-top: 8px;
+  }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <h1 class="title">Recipe from Receipt</h1>
+    <p class="tagline">Upload a grocery receipt. Claude reads what you actually bought and writes a quick recipe around it.</p>
+  </header>
+
+  <section id="uploadCard" class="card">
+    <div class="card-body">
+      <div class="card-title"><span>01 &middot; Upload</span></div>
+      <label id="dropzone" class="dropzone" for="fileInput">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2h9l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"></path>
+          <path d="M15 2v3a1 1 0 0 0 1 1h3"></path>
+          <path d="M8 12h8M8 15.5h8M8 8.5h4"></path>
+        </svg>
+        <span class="dz-main">Drop a photo or PDF of your receipt</span>
+        <span class="dz-sub">or click to choose a file</span>
+        <input id="fileInput" type="file" accept="image/*,application/pdf" />
+      </label>
+      <div id="uploadStatus" style="margin-top:14px;" hidden></div>
+    </div>
+  </section>
+
+  <section id="itemsCard" class="card" hidden>
+    <div class="perf on-surface"></div>
+    <div class="card-body">
+      <div class="card-title">
+        <span>02 &middot; Your items</span>
+        <button class="link-btn" id="startOverBtn" type="button">start over</button>
+      </div>
+      <div class="receipt-preview" style="margin-bottom:16px;">
+        <img id="receiptThumb" class="receipt-thumb" alt="Uploaded receipt" />
+        <div class="receipt-meta" id="receiptMeta"></div>
+      </div>
+      <div id="itemsStatus"></div>
+      <div id="itemList" class="item-list"></div>
+      <div class="add-item-row">
+        <input id="addItemInput" type="text" placeholder="Missed something? Add it&hellip;" />
+        <button id="addItemBtn" type="button">Add</button>
+      </div>
+
+      <div class="prefs">
+        <div>
+          <label>Time budget</label>
+          <div class="chip-row" id="timeChips">
+            <button class="chip" data-value="about 15 minutes, minimal cooking">~15 min</button>
+            <button class="chip" data-value="about 30 minutes">~30 min</button>
+            <button class="chip" data-value="no particular rush, up to an hour">no rush</button>
+          </div>
+        </div>
+        <div>
+          <label for="dietInput">Preferences (optional)</label>
+          <input id="dietInput" type="text" placeholder="e.g. vegetarian, no dairy, extra spicy&hellip;" />
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <button class="cta" id="generateBtn" type="button">Cook something up</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="recipeCard" class="card" hidden>
+    <div class="perf on-surface"></div>
+    <div class="card-body">
+      <div class="card-title"><span>03 &middot; Recipe</span></div>
+      <div id="recipeStatus" style="margin-bottom:12px;"></div>
+      <div id="recipeBody" class="recipe-body"></div>
+      <div class="recipe-actions" id="recipeActions" hidden>
+        <button class="secondary" id="regenBtn" type="button">Make another</button>
+        <button class="secondary" id="newReceiptBtn" type="button">New receipt</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="historyCard" class="card" hidden>
+    <div class="card-body">
+      <div class="card-title"><span>Recent</span></div>
+      <div id="historyList" class="history"></div>
+    </div>
+  </section>
+
+  <footer class="note">Reads receipts in any language</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+   * BACKEND API CONTRACT
+   * ------------------------------------------------------------
+   * This page never talks to an AI API directly and holds no key.
+   * It calls two endpoints on YOUR backend, which should hold your
+   * ANTHROPIC_API_KEY (or any provider's key) as a server-side
+   * secret and never send it to the browser.
+   *
+   * Set API_BASE below to your backend's origin. Leave it "" to
+   * call same-origin relative paths ("/api/..."). If your backend
+   * lives on a different origin than wherever you host this page,
+   * it must send CORS headers allowing this page's origin.
+   *
+   * 1) POST {API_BASE}/api/extract-items
+   *    Request:  multipart/form-data, field "receipt" = an image
+   *              file (PNG/JPEG/WebP/GIF). This page already
+   *              converts PDFs to a PNG client-side before this
+   *              call, so your backend only ever sees images.
+   *    Response: 200 JSON
+   *      { "items": [ { "name": "baby spinach", "quantity": "1 bag" }, ... ] }
+   *      (quantity may be "" or omitted; an empty items array is fine
+   *      if nothing could be read)
+   *    Errors:   any non-2xx status, ideally with JSON { "error": "..." }
+   *
+   *    Suggested implementation: forward the image to a vision-capable
+   *    Claude model via the Messages API with a prompt asking for a
+   *    JSON array of grocery items (name + quantity), and parse the
+   *    reply. Ignore store name, prices, tax lines, coupons and totals.
+   *
+   * 2) POST {API_BASE}/api/recipe
+   *    Request:  JSON
+   *      { "items": [{"name": "...", "quantity": "..."}],
+   *        "timeBudget": "about 30 minutes" | null,
+   *        "preferences": "vegetarian, no dairy" }
+   *    Response: 200 JSON
+   *      { "recipe": "## Recipe Title\n\nIntro line.\n\n### Ingredients\n- ...\n\n### Steps\n1. ..." }
+   *      (Markdown; this page renders ## and ### headings, "- " bullets,
+   *      "1. " numbered steps, and bold or italic emphasis.)
+   *    Errors:   same shape as above.
+   * ============================================================ */
+  var API_BASE = "";
+
+  var els = {
+    uploadCard: document.getElementById("uploadCard"),
+    dropzone: document.getElementById("dropzone"),
+    fileInput: document.getElementById("fileInput"),
+    uploadStatus: document.getElementById("uploadStatus"),
+    itemsCard: document.getElementById("itemsCard"),
+    receiptThumb: document.getElementById("receiptThumb"),
+    receiptMeta: document.getElementById("receiptMeta"),
+    itemsStatus: document.getElementById("itemsStatus"),
+    itemList: document.getElementById("itemList"),
+    addItemInput: document.getElementById("addItemInput"),
+    addItemBtn: document.getElementById("addItemBtn"),
+    timeChips: document.getElementById("timeChips"),
+    dietInput: document.getElementById("dietInput"),
+    generateBtn: document.getElementById("generateBtn"),
+    recipeCard: document.getElementById("recipeCard"),
+    recipeStatus: document.getElementById("recipeStatus"),
+    recipeBody: document.getElementById("recipeBody"),
+    recipeActions: document.getElementById("recipeActions"),
+    regenBtn: document.getElementById("regenBtn"),
+    newReceiptBtn: document.getElementById("newReceiptBtn"),
+    startOverBtn: document.getElementById("startOverBtn"),
+    historyCard: document.getElementById("historyCard"),
+    historyList: document.getElementById("historyList"),
+  };
+
+  var state = {
+    items: [],       // {name, quantity, checked}
+    timeChoice: null,
+    imageBlob: null,
+  };
+
+  var HISTORY_KEY = "recipefromreceipt.history.v1";
+
+  // ---------- tiny markdown-lite renderer ----------
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function inline(s) {
+    s = escapeHtml(s);
+    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/(^|[^*])\*(?!\*)(.+?)\*(?!\*)/g, "$1<em>$2</em>");
+    return s;
+  }
+  function mdLite(text) {
+    var lines = text.replace(/\r\n/g, "\n").split("\n");
+    var html = "";
+    var i = 0;
+    while (i < lines.length) {
+      var line = lines[i];
+      if (/^\s*$/.test(line)) { i++; continue; }
+      var h2 = line.match(/^##\s+(.*)/);
+      var h3 = line.match(/^###\s+(.*)/);
+      if (h2) { html += "<h2>" + inline(h2[1]) + "</h2>"; i++; continue; }
+      if (h3) { html += "<h3>" + inline(h3[1]) + "</h3>"; i++; continue; }
+      if (/^\s*[-*]\s+/.test(line)) {
+        html += "<ul>";
+        while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+          html += "<li>" + inline(lines[i].replace(/^\s*[-*]\s+/, "")) + "</li>";
+          i++;
+        }
+        html += "</ul>";
+        continue;
+      }
+      if (/^\s*\d+[.)]\s+/.test(line)) {
+        html += "<ol>";
+        while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) {
+          html += "<li>" + inline(lines[i].replace(/^\s*\d+[.)]\s+/, "")) + "</li>";
+          i++;
+        }
+        html += "</ol>";
+        continue;
+      }
+      var buf = [line];
+      i++;
+      while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^#{2,3}\s/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\d+[.)]\s+/.test(lines[i])) {
+        buf.push(lines[i]);
+        i++;
+      }
+      html += "<p>" + inline(buf.join(" ")) + "</p>";
+    }
+    return html;
+  }
+
+  // ---------- helpers ----------
+  function show(el) { el.hidden = false; }
+  function hide(el) { el.hidden = true; }
+
+  function setStatus(el, text, opts) {
+    opts = opts || {};
+    if (!text) { el.innerHTML = ""; hide(el); return; }
+    show(el);
+    if (opts.spinner) {
+      el.innerHTML = '<div class="status-row"><span class="spinner"></span><span></span></div>';
+      el.querySelector("span:last-child").textContent = text;
+    } else if (opts.error) {
+      el.innerHTML = '<div class="notice"></div>';
+      el.querySelector(".notice").textContent = text;
+    } else {
+      el.innerHTML = '<div class="notice quiet"></div>';
+      el.querySelector(".notice").textContent = text;
+    }
+  }
+
+  // ---------- backend calls ----------
+  function ApiError(status, message) {
+    this.status = status;
+    this.message = message;
+  }
+
+  function handleResponse(res) {
+    if (res.ok) return res.json();
+    return res.json().catch(function () { return {}; }).then(function (body) {
+      throw new ApiError(res.status, body && body.error);
+    });
+  }
+
+  function postForm(url, form) {
+    return fetch(url, { method: "POST", body: form }).then(handleResponse);
+  }
+
+  function postJson(url, obj) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(obj),
+    }).then(handleResponse);
+  }
+
+  function apiErrorCopy(err) {
+    if (err instanceof ApiError) {
+      if (err.message) return err.message;
+      if (err.status === 401 || err.status === 403) return "The server rejected the request — check your backend's API key configuration.";
+      if (err.status === 404) return "The backend endpoint wasn't found. Make sure your API is deployed and API_BASE is set correctly.";
+      if (err.status === 413) return "That file is too large. Try a smaller photo.";
+      if (err.status === 429) return "Too many requests — wait a moment and try again.";
+      if (err.status >= 500) return "The server had a problem. Try again in a moment.";
+      return "Something went wrong (" + err.status + ").";
+    }
+    return "Couldn't reach the backend. Check your connection and that the API is running.";
+  }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error("failed to load " + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  // ---------- item list rendering ----------
+  function renderItems() {
+    els.itemList.innerHTML = "";
+    state.items.forEach(function (item, idx) {
+      var row = document.createElement("div");
+      row.className = "item-row" + (item.checked ? "" : " unchecked");
+
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = item.checked;
+      cb.setAttribute("id", "item-cb-" + idx);
+      cb.addEventListener("change", function () {
+        item.checked = cb.checked;
+        row.className = "item-row" + (item.checked ? "" : " unchecked");
+      });
+
+      var name = document.createElement("input");
+      name.type = "text";
+      name.className = "item-name";
+      name.value = item.name;
+      name.setAttribute("id", "item-name-" + idx);
+      name.addEventListener("input", function () { item.name = name.value; });
+
+      var qty = document.createElement("span");
+      qty.className = "item-qty";
+      qty.textContent = item.quantity || "";
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "item-del";
+      del.setAttribute("aria-label", "Remove item");
+      del.textContent = "×";
+      del.addEventListener("click", function () {
+        state.items.splice(idx, 1);
+        renderItems();
+      });
+
+      row.appendChild(cb);
+      row.appendChild(name);
+      if (item.quantity) row.appendChild(qty);
+      row.appendChild(del);
+      els.itemList.appendChild(row);
+    });
+  }
+
+  els.addItemBtn.addEventListener("click", addManualItem);
+  els.addItemInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addManualItem(); }
+  });
+  function addManualItem() {
+    var val = els.addItemInput.value.trim();
+    if (!val) return;
+    state.items.push({ name: val, quantity: "", checked: true });
+    els.addItemInput.value = "";
+    renderItems();
+  }
+
+  els.timeChips.addEventListener("click", function (e) {
+    var btn = e.target.closest(".chip");
+    if (!btn) return;
+    var already = btn.classList.contains("active");
+    Array.prototype.forEach.call(els.timeChips.children, function (c) { c.classList.remove("active"); });
+    if (!already) {
+      btn.classList.add("active");
+      state.timeChoice = btn.getAttribute("data-value");
+    } else {
+      state.timeChoice = null;
+    }
+  });
+
+  // ---------- upload flow ----------
+  els.fileInput.addEventListener("change", function () {
+    if (els.fileInput.files && els.fileInput.files[0]) handleFile(els.fileInput.files[0]);
+  });
+  ["dragenter", "dragover"].forEach(function (evt) {
+    els.dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      els.dropzone.classList.add("drag");
+    });
+  });
+  ["dragleave", "drop"].forEach(function (evt) {
+    els.dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      els.dropzone.classList.remove("drag");
+    });
+  });
+  els.dropzone.addEventListener("drop", function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  function handleFile(file) {
+    setStatus(els.uploadStatus, "", {});
+    if (file.type === "application/pdf") {
+      setStatus(els.uploadStatus, "Reading PDF…", { spinner: true });
+      pdfFirstPageToBlob(file).then(function (blob) {
+        setStatus(els.uploadStatus, "", {});
+        proceedWithImage(blob, file.name);
+      }).catch(function () {
+        setStatus(els.uploadStatus, "That PDF couldn't be opened in-browser. Try uploading a photo of the receipt instead, or a screenshot of the PDF.", { error: true });
+      });
+    } else if (file.type.indexOf("image/") === 0) {
+      proceedWithImage(file, file.name);
+    } else {
+      setStatus(els.uploadStatus, "Please choose an image or a PDF.", { error: true });
+    }
+  }
+
+  function pdfFirstPageToBlob(file) {
+    return (window.pdfjsLib ? Promise.resolve() : loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"))
+      .then(function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        return file.arrayBuffer();
+      })
+      .then(function (buf) { return window.pdfjsLib.getDocument({ data: buf }).promise; })
+      .then(function (pdf) { return pdf.getPage(1); })
+      .then(function (page) {
+        var viewport = page.getViewport({ scale: 2 });
+        var canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        var ctx = canvas.getContext("2d");
+        return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+          return new Promise(function (resolve, reject) {
+            canvas.toBlob(function (blob) {
+              if (blob) resolve(blob); else reject(new Error("toBlob failed"));
+            }, "image/png");
+          });
+        });
+      });
+  }
+
+  function proceedWithImage(blob, filename) {
+    state.imageBlob = blob;
+    var url = URL.createObjectURL(blob);
+    els.receiptThumb.src = url;
+    els.receiptMeta.innerHTML = "<strong>" + escapeHtml(filename || "receipt") + "</strong>";
+    show(els.itemsCard);
+    els.itemsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    extractItems(blob);
+  }
+
+  function extractItems(blob) {
+    state.items = [];
+    renderItems();
+    setStatus(els.itemsStatus, "Reading your receipt…", { spinner: true });
+
+    var form = new FormData();
+    form.append("receipt", blob, "receipt.png");
+
+    postForm(API_BASE + "/api/extract-items", form).then(function (data) {
+      setStatus(els.itemsStatus, "", {});
+      var items = data && data.items;
+      if (!Array.isArray(items) || items.length === 0) {
+        setStatus(els.itemsStatus, "Couldn't find any items on that receipt. Add them by hand below.", {});
+        return;
+      }
+      state.items = items.filter(function (d) { return d && d.name; }).map(function (d) {
+        return { name: String(d.name), quantity: d.quantity ? String(d.quantity) : "", checked: true };
+      });
+      renderItems();
+    }).catch(function (err) {
+      setStatus(els.itemsStatus, apiErrorCopy(err), { error: true });
+    });
+  }
+
+  // ---------- recipe generation ----------
+  function buildRecipePayload() {
+    var chosen = state.items.filter(function (i) { return i.checked && i.name.trim(); });
+    return {
+      items: chosen.map(function (i) { return { name: i.name, quantity: i.quantity || "" }; }),
+      timeBudget: state.timeChoice || null,
+      preferences: els.dietInput.value.trim(),
+    };
+  }
+
+  function generateRecipe() {
+    els.generateBtn.disabled = true;
+    els.regenBtn.disabled = true;
+    show(els.recipeCard);
+    els.recipeBody.innerHTML = "";
+    hide(els.recipeActions);
+    setStatus(els.recipeStatus, "Thinking of something to cook…", { spinner: true });
+    els.recipeCard.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    postJson(API_BASE + "/api/recipe", buildRecipePayload()).then(function (data) {
+      els.generateBtn.disabled = false;
+      els.regenBtn.disabled = false;
+      setStatus(els.recipeStatus, "", {});
+      var text = (data && data.recipe) || "";
+      els.recipeBody.innerHTML = mdLite(text);
+      show(els.recipeActions);
+      if (text) saveToHistory(text);
+    }).catch(function (err) {
+      els.generateBtn.disabled = false;
+      els.regenBtn.disabled = false;
+      setStatus(els.recipeStatus, apiErrorCopy(err), { error: true });
+    });
+  }
+
+  els.generateBtn.addEventListener("click", generateRecipe);
+  els.regenBtn.addEventListener("click", generateRecipe);
+  els.newReceiptBtn.addEventListener("click", resetAll);
+  els.startOverBtn.addEventListener("click", resetAll);
+
+  function resetAll() {
+    state.items = [];
+    state.imageBlob = null;
+    els.fileInput.value = "";
+    els.dietInput.value = "";
+    state.timeChoice = null;
+    Array.prototype.forEach.call(els.timeChips.children, function (c) { c.classList.remove("active"); });
+    hide(els.itemsCard);
+    hide(els.recipeCard);
+    setStatus(els.uploadStatus, "", {});
+    setStatus(els.itemsStatus, "", {});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ---------- history (per-browser, local only) ----------
+  function readHistory() {
+    try {
+      var raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveToHistory(text) {
+    var titleMatch = text.match(/^##\s+(.*)/m);
+    var title = titleMatch ? titleMatch[1].trim() : "Recipe";
+    var entry = { title: title, text: text, date: new Date().toISOString() };
+    try {
+      var hist = readHistory();
+      hist.unshift(entry);
+      hist = hist.slice(0, 6);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+      renderHistory();
+    } catch (e) { /* best effort */ }
+  }
+  function renderHistory() {
+    var hist = readHistory();
+    if (!hist.length) { hide(els.historyCard); return; }
+    show(els.historyCard);
+    els.historyList.innerHTML = "";
+    hist.forEach(function (entry) {
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "history-row";
+      var d = new Date(entry.date);
+      var dateStr = isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      row.innerHTML = '<span class="history-title"></span><span class="history-date"></span>';
+      row.querySelector(".history-title").textContent = entry.title;
+      row.querySelector(".history-date").textContent = dateStr;
+      row.addEventListener("click", function () {
+        show(els.recipeCard);
+        els.recipeBody.innerHTML = mdLite(entry.text);
+        setStatus(els.recipeStatus, "", {});
+        show(els.recipeActions);
+        els.recipeCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      els.historyList.appendChild(row);
+    });
+  }
+
+  // ---------- boot ----------
+  function boot() {
+    renderHistory();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>
